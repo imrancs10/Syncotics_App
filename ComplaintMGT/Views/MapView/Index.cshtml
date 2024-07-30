@@ -1,0 +1,872 @@
+﻿@{
+    ViewData["Title"] = "Map - View";
+    Layout = "_LayoutNew";
+}
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v8.2.0/ol.css">
+@* <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"> *@
+
+<link href="~/v2.0/mapview/css/map.css" rel="stylesheet" />
+<style>
+    input:focus, textarea:focus, select:focus {
+        outline: none;
+    }
+</style>
+<div class='main-box'>
+    <div class='col-12'>
+        <div class="row"> 
+        <div class='header'>
+            <div class='headerholder' style="display:flex">
+                <div class='col-1'>
+                    <div class='mycontainer'>
+                        <button class="mapbtn">Map View</button>
+                    </div>
+                </div>
+
+                <div class='col-4 headerbtnholder insideshadow'>
+                    <Button class='headbtn' OnClick="loadDeviceLayer()"> <label class="btntextcolor">Site</label></Button>
+                    <Button class='headbtn' OnClick="loadDeviceLayer()"> <label class="btntextcolor">Device</label></Button>
+                    <Button class='headbtn' OnClick="onclickLayerShow('Site')"> <label class="btntextcolor">Assessts</label></Button>
+                </div>
+                <div class='col-1 filterbtnholder'>
+                    <Button class='filterbtn' OnClick="loadModel()"></Button>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div class='col-12' style="margin-top:30px">
+        <div class="row">
+        <div class="col-2">
+
+            <div class="row">
+                <div style="border:1px black solid; padding:10px;margin:5px">
+                    <label>Measurment</label>
+                    <div class='row' style="padding:10px;">
+                        <select id="MeasurementSelectbox" style="margin:5px" onchange="typeSelectmeasur(this)">
+                            <option value="LineString" id="lineStringId">Line</option>
+                            <option value="Polygon" id="polygonId">Area</option>
+                        </select>
+                        <select id="UnitSelectbox" style="margin:5px" onchange="typeUniteMeasur(this)">
+                            <option value="KM">Kilometer</option>
+                            <option value="Metre">Meter</option>
+                        </select>
+                    </div>
+                    <div class='row'>
+                        <label> <input type='checkbox' id="ShowSegment" checked /> Show Segment Lengths</label>
+                        <label> <input type='checkbox' id="ClearPrevious" checked /> Clear Previous Measure</label>
+                    </div>
+                    <div class='row'>
+                        <div class="col-6">
+                            <button id="startmesrment" type="button" style="display:block" class="btn btn-secondary btn-sm" onclick="startMeasurment()"> START </button>
+                            <button id="stopmesrment" style="display:none" type="button" class="btn btn-secondary btn-sm" onclick="stopMeasurment()"> STOP </button>
+                        </div>
+                        <div class="col-6">
+                            <button id="clearmesrment"
+                                    style="display:block"
+                                    type="button" class="btn btn-secondary btn-sm" onclick="clearMeasurment()">
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="row">
+
+                <div class="input-group mb-3" style="padding:0px">
+                    <input type="text" id="seacrhtext" placeholder="Search here" aria-label="Recipient's username" aria-describedby="button-addon2" style="width: 83%; border: 1px lightgray solid; padding: 5px 4px 4px 8px; }">
+                    <button type="button" id="button-addon2" style="border: 1px lightgray solid; border-left: none; background: #fff;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+                        </svg>
+                    </button>
+                    <ul id="searchresult"></ul>
+                </div>
+
+
+                <Button OnClick="loadStartDrag()" style="border: 1px lightgray solid; border-radius: 12px; padding: 10px; box-shadow: 3px 2px 3px lightgray;"> Drag & Zoom</Button>
+                <Button OnClick="changeMapType('Street')" style="border: 1px lightgray solid; border-radius: 12px; padding: 10px; box-shadow: 3px 2px 3px lightgray;"> Street Map</Button>
+                <Button OnClick="changeMapType('Satellite')" style="border: 1px lightgray solid; border-radius: 12px; padding: 10px; box-shadow: 3px 2px 3px lightgray;"> Satellite Map</Button>
+                <Button OnClick="changeMapType('Climate')" style="border: 1px lightgray solid; border-radius: 12px; padding: 10px; box-shadow: 3px 2px 3px lightgray;"> Climate</Button>
+            </div>
+
+            <div class="row"></div>
+
+
+        </div>
+        <div class="col-9">
+
+            <div style="width:100%;height:80vh" id="map"></div>
+            <div style="display: none;">
+                <div id="popup"></div>
+            </div>
+        </div>
+        </div>
+    </div>
+    <div class="modal left fade" id="filtermodel" tabindex="" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="row">
+                <button type="button" data-dismiss="modal">Close</button>
+            </div>
+
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="nav flex-sm-column flex-row">
+                        <a class="nav-item nav-link active" href="#">Home</a>
+                        <a href="#" class="nav-item nav-link">Link</a>
+                        <a href="#" class="nav-item nav-link">Link</a>
+                        <a href="#" class="nav-item nav-link">Link</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/ol@v8.2.0/dist/ol.js"></script>
+@* <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script> *@
+@* <script src="Assests/ol.js"></script> *@
+<script>
+
+    loadModel = () => {
+        $('#filtermodel').modal('show');
+    }
+
+    //#region icon
+    let siteicon = '<svg width="25" height="25" viewBox="0 0 70 100" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M52.8238 64.206C38.2401 83.072 36.1329 99.013 36.1329 99.013C35.8093 100.329 34.5131 100.329 34.1884 99.013C34.1884 99.013 31.4341 83.072 17.1751 64.205C5.34686 49.287 0 43.436 0 31.298C0 13.894 15.3936 0 34.8377 0C54.1201 0 70 13.894 70 31.298C70 43.437 59.6287 55.284 52.8238 64.206Z" fill="black"/> <path d="M52.8954 17.3364C53.6699 17.1905 54.2574 16.5081 54.2574 15.6838C54.2574 14.7531 53.5104 14 52.5884 14H17.4131C16.4916 14 15.7451 14.7531 15.7451 15.6838C15.7451 16.5076 16.3316 17.1905 17.1061 17.3364L10 31.182V33.8763C10 35.0857 11.27 36.0659 12.8355 36.0659C13.361 36.0659 13.852 35.9529 14.274 35.7606V54H55.7255V35.7606C56.1485 35.9539 56.638 36.0659 57.165 36.0659C58.7305 36.0659 60 35.0862 60 33.8763V31.182L52.8954 17.3364ZM18.3886 36.0654C16.8956 36.0654 15.6851 35.0862 15.6851 33.8763V33.624H15.6716V31.1825L21.0296 17.3682H25.3102L21.0926 31.1825V33.8768V33.8779C21.0916 35.0857 19.8816 36.0654 18.3886 36.0654ZM29.4687 36.0654C27.9752 36.0654 26.7647 35.0862 26.7647 33.8763V33.624V31.1825L29.0042 17.3682H33.2712L32.1727 31.1825V33.624V33.8763C32.1717 35.0852 30.9612 36.0654 29.4687 36.0654ZM40.5463 36.0654C39.0538 36.0654 37.8433 35.0862 37.8433 33.8763V33.624V31.1825L36.7433 17.3682H40.9973L43.2368 31.1825V33.8768C43.2368 33.9137 43.2428 33.9505 43.2448 33.9859C43.1728 35.1432 41.9938 36.0654 40.5463 36.0654ZM54.3154 33.8763C54.3154 35.0857 53.1049 36.0654 51.6119 36.0654C50.1194 36.0654 48.9089 35.0862 48.9089 33.8763V33.624V31.1825L44.6899 17.3682H48.9709L54.3289 31.1825V33.624H54.3159L54.3154 33.8763Z" fill="white"/> </svg>';
+    let deviceredicon = '<svg width="25" height="25" viewBox="0 0 70 100" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M52.8238 64.206C38.2401 83.072 36.1329 99.013 36.1329 99.013C35.8093 100.329 34.5131 100.329 34.1884 99.013C34.1884 99.013 31.4341 83.072 17.1751 64.205C5.34686 49.287 0 43.436 0 31.298C0 13.894 15.3936 0 34.8377 0C54.1201 0 70 13.894 70 31.298C70 43.437 59.6287 55.284 52.8238 64.206Z" fill="#E50A0A"/> <path d="M29.49 34.3645H32.3728C32.624 34.3645 32.8649 34.2644 33.0425 34.0862C33.2201 33.908 33.3199 33.6664 33.3199 33.4144V30.5282C33.3199 30.2762 33.2201 30.0346 33.0425 29.8564C32.8649 29.6782 32.624 29.5781 32.3728 29.5781H29.49C29.2388 29.5781 28.998 29.6782 28.8204 29.8564C28.6427 30.0346 28.543 30.2762 28.543 30.5282V33.4144C28.543 33.6664 28.6427 33.908 28.8204 34.0862C28.998 34.2644 29.2388 34.3645 29.49 34.3645ZM30.4371 31.4782H31.4258V32.4644H30.4427L30.4371 31.4782Z" fill="white"/> <path d="M35.8845 34.3645H38.7617C39.0128 34.3645 39.2537 34.2644 39.4313 34.0862C39.6089 33.908 39.7087 33.6664 39.7087 33.4144V30.5282C39.7087 30.2762 39.6089 30.0346 39.4313 29.8564C39.2537 29.6782 39.0128 29.5781 38.7617 29.5781H35.8845C35.6334 29.5781 35.3925 29.6782 35.2149 29.8564C35.0373 30.0346 34.9375 30.2762 34.9375 30.5282V33.4144C34.9375 33.6664 35.0373 33.908 35.2149 34.0862C35.3925 34.2644 35.6334 34.3645 35.8845 34.3645ZM36.8316 31.4782H37.8146V32.4644H36.8316V31.4782Z" fill="white"/> <path d="M29.49 41.8079H32.3728C32.624 41.8079 32.8649 41.7078 33.0425 41.5296C33.2201 41.3514 33.3199 41.1098 33.3199 40.8578V37.9735C33.3199 37.7215 33.2201 37.4799 33.0425 37.3017C32.8649 37.1235 32.624 37.0234 32.3728 37.0234H29.49C29.2388 37.0234 28.998 37.1235 28.8204 37.3017C28.6427 37.4799 28.543 37.7215 28.543 37.9735V40.8597C28.5435 41.1114 28.6435 41.3525 28.821 41.5303C28.9986 41.708 29.2392 41.8079 29.49 41.8079ZM30.4371 38.9216H31.4258V39.9078H30.4427L30.4371 38.9216Z" fill="white"/> <path d="M35.8845 41.8079H38.7617C39.0128 41.8079 39.2537 41.7078 39.4313 41.5296C39.6089 41.3514 39.7087 41.1098 39.7087 40.8578V37.9735C39.7087 37.7215 39.6089 37.4799 39.4313 37.3017C39.2537 37.1235 39.0128 37.0234 38.7617 37.0234H35.8845C35.6334 37.0234 35.3925 37.1235 35.2149 37.3017C35.0373 37.4799 34.9375 37.7215 34.9375 37.9735V40.8597C34.938 41.1114 35.038 41.3525 35.2156 41.5303C35.3931 41.708 35.6337 41.8079 35.8845 41.8079ZM36.8316 38.9216H37.8146V39.9078H36.8316V38.9216Z" fill="white"/> <path d="M29.49 49.2316H32.3728C32.624 49.2316 32.8649 49.1315 33.0425 48.9534C33.2201 48.7752 33.3199 48.5336 33.3199 48.2816V45.3954C33.3199 45.1434 33.2201 44.9017 33.0425 44.7236C32.8649 44.5454 32.624 44.4453 32.3728 44.4453H29.49C29.2388 44.4453 28.998 44.5454 28.8204 44.7236C28.6427 44.9017 28.543 45.1434 28.543 45.3954V48.2816C28.543 48.5336 28.6427 48.7752 28.8204 48.9534C28.998 49.1315 29.2388 49.2316 29.49 49.2316ZM30.4371 46.3454H31.4258V47.3316H30.4427L30.4371 46.3454Z" fill="white"/> <path d="M35.8845 49.2316H38.7617C39.0128 49.2316 39.2537 49.1315 39.4313 48.9534C39.6089 48.7752 39.7087 48.5336 39.7087 48.2816V45.3954C39.7087 45.1434 39.6089 44.9017 39.4313 44.7236C39.2537 44.5454 39.0128 44.4453 38.7617 44.4453H35.8845C35.6334 44.4453 35.3925 44.5454 35.2149 44.7236C35.0373 44.9017 34.9375 45.1434 34.9375 45.3954V48.2816C34.9375 48.5336 35.0373 48.7752 35.2149 48.9534C35.3925 49.1315 35.6334 49.2316 35.8845 49.2316ZM36.8316 46.3454H37.8146V47.3316H36.8316V46.3454Z" fill="white"/> <path d="M29.49 56.6926H32.3728C32.624 56.6926 32.8649 56.5925 33.0425 56.4143C33.2201 56.2361 33.3199 55.9945 33.3199 55.7425V52.8563C33.3199 52.6043 33.2201 52.3627 33.0425 52.1845C32.8649 52.0063 32.624 51.9062 32.3728 51.9062H29.49C29.2388 51.9062 28.998 52.0063 28.8204 52.1845C28.6427 52.3627 28.543 52.6043 28.543 52.8563V55.7425C28.543 55.9945 28.6427 56.2361 28.8204 56.4143C28.998 56.5925 29.2388 56.6926 29.49 56.6926ZM30.4371 53.8063H31.4258V54.7925H30.4427L30.4371 53.8063Z" fill="white"/> <path d="M35.8845 56.6926H38.7617C39.0128 56.6926 39.2537 56.5925 39.4313 56.4143C39.6089 56.2361 39.7087 55.9945 39.7087 55.7425V52.8563C39.7087 52.6043 39.6089 52.3627 39.4313 52.1845C39.2537 52.0063 39.0128 51.9062 38.7617 51.9062H35.8845C35.6334 51.9062 35.3925 52.0063 35.2149 52.1845C35.0373 52.3627 34.9375 52.6043 34.9375 52.8563V55.7425C34.9375 55.9945 35.0373 56.2361 35.2149 56.4143C35.3925 56.5925 35.6334 56.6926 35.8845 56.6926ZM36.8316 53.8063H37.8146V54.7925H36.8316V53.8063Z" fill="white"/> <path d="M43.3008 25.1094H24.947C24.6959 25.1094 24.455 25.2095 24.2774 25.3876C24.0998 25.5658 24 25.8075 24 26.0594V61.0534C24 61.3054 24.0998 61.547 24.2774 61.7252C24.455 61.9034 24.6959 62.0035 24.947 62.0035H43.3008C43.552 62.0035 43.7929 61.9034 43.9705 61.7252C44.1481 61.547 44.2479 61.3054 44.2479 61.0534V26.0594C44.2479 25.8075 44.1481 25.5658 43.9705 25.3876C43.7929 25.2095 43.552 25.1094 43.3008 25.1094ZM42.3538 60.1034H25.8941V27.0095H42.3538V60.1034Z" fill="white"/> <path d="M41.569 15.9766C36.1178 15.9766 35.3033 19.125 35.2711 19.2599C35.2148 19.4991 35.2543 19.751 35.3811 19.9613C35.5079 20.1716 35.7119 20.3237 35.9492 20.3848C36.1904 20.447 36.4462 20.4133 36.6633 20.2908C36.8803 20.1683 37.0418 19.9664 37.1141 19.7273C37.1368 19.6513 37.7126 17.8786 41.5747 17.8786C45.8837 17.8786 46.4501 19.6684 46.4539 19.6665C46.4975 19.8811 46.6138 20.074 46.7829 20.2125C46.952 20.351 47.1636 20.4266 47.382 20.4266C47.4456 20.4269 47.5091 20.4205 47.5714 20.4076C47.6934 20.3833 47.8094 20.3351 47.9129 20.2658C48.0163 20.1965 48.1052 20.1074 48.1743 20.0036C48.2434 19.8999 48.2915 19.7835 48.3158 19.6611C48.34 19.5387 48.34 19.4127 48.3158 19.2903C48.2381 18.9559 47.4767 15.9766 41.569 15.9766Z" fill="white"/> <path d="M41.3464 12C31.0899 12 29.6371 18.0442 29.5803 18.3007C29.5272 18.5454 29.5725 18.8012 29.7064 19.0125C29.8404 19.2238 30.052 19.3735 30.2954 19.4291C30.5388 19.4847 30.7942 19.4417 31.0061 19.3093C31.218 19.177 31.3693 18.9661 31.427 18.7225C31.4744 18.5325 32.6961 13.9001 41.3464 13.9001C51.0063 13.9001 52.0859 18.4945 52.1257 18.6788C52.1659 18.8969 52.2809 19.0939 52.4508 19.2359C52.6206 19.3778 52.8346 19.4557 53.0557 19.456C53.1135 19.4563 53.1712 19.4513 53.228 19.4408C53.4749 19.3946 53.6934 19.252 53.8355 19.0443C53.9776 18.8365 54.0316 18.5807 53.9857 18.333C53.9402 18.0765 52.6901 12 41.3464 12Z" fill="white"/> <path d="M44.2079 21.4531H39.3533C39.1021 21.4531 38.8612 21.5532 38.6836 21.7314C38.506 21.9096 38.4062 22.1512 38.4062 22.4032C38.4062 22.6551 38.506 22.8968 38.6836 23.075C38.8612 23.2531 39.1021 23.3532 39.3533 23.3532H44.2079C44.459 23.3532 44.6999 23.2531 44.8775 23.075C45.0551 22.8968 45.1549 22.6551 45.1549 22.4032C45.1549 22.1512 45.0551 21.9096 44.8775 21.7314C44.6999 21.5532 44.459 21.4531 44.2079 21.4531Z" fill="white"/> </svg>';
+    let devicegreenicon = '<svg width="25" height="25" viewBox="0 0 70 100" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M52.8238 64.206C38.2401 83.072 36.1329 99.013 36.1329 99.013C35.8093 100.329 34.5131 100.329 34.1884 99.013C34.1884 99.013 31.4341 83.072 17.1751 64.205C5.34686 49.287 0 43.436 0 31.298C0 13.894 15.3936 0 34.8377 0C54.1201 0 70 13.894 70 31.298C70 43.437 59.6287 55.284 52.8238 64.206Z" fill="#009C4D"/> <path d="M29.49 34.3645H32.3728C32.624 34.3645 32.8649 34.2644 33.0425 34.0862C33.2201 33.908 33.3199 33.6664 33.3199 33.4144V30.5282C33.3199 30.2762 33.2201 30.0346 33.0425 29.8564C32.8649 29.6782 32.624 29.5781 32.3728 29.5781H29.49C29.2388 29.5781 28.998 29.6782 28.8204 29.8564C28.6427 30.0346 28.543 30.2762 28.543 30.5282V33.4144C28.543 33.6664 28.6427 33.908 28.8204 34.0862C28.998 34.2644 29.2388 34.3645 29.49 34.3645ZM30.4371 31.4782H31.4258V32.4644H30.4427L30.4371 31.4782Z" fill="white"/> <path d="M35.8845 34.3645H38.7617C39.0128 34.3645 39.2537 34.2644 39.4313 34.0862C39.6089 33.908 39.7087 33.6664 39.7087 33.4144V30.5282C39.7087 30.2762 39.6089 30.0346 39.4313 29.8564C39.2537 29.6782 39.0128 29.5781 38.7617 29.5781H35.8845C35.6334 29.5781 35.3925 29.6782 35.2149 29.8564C35.0373 30.0346 34.9375 30.2762 34.9375 30.5282V33.4144C34.9375 33.6664 35.0373 33.908 35.2149 34.0862C35.3925 34.2644 35.6334 34.3645 35.8845 34.3645ZM36.8316 31.4782H37.8146V32.4644H36.8316V31.4782Z" fill="white"/> <path d="M29.49 41.8079H32.3728C32.624 41.8079 32.8649 41.7078 33.0425 41.5296C33.2201 41.3514 33.3199 41.1098 33.3199 40.8578V37.9735C33.3199 37.7215 33.2201 37.4799 33.0425 37.3017C32.8649 37.1235 32.624 37.0234 32.3728 37.0234H29.49C29.2388 37.0234 28.998 37.1235 28.8204 37.3017C28.6427 37.4799 28.543 37.7215 28.543 37.9735V40.8597C28.5435 41.1114 28.6435 41.3525 28.821 41.5303C28.9986 41.708 29.2392 41.8079 29.49 41.8079ZM30.4371 38.9216H31.4258V39.9078H30.4427L30.4371 38.9216Z" fill="white"/> <path d="M35.8845 41.8079H38.7617C39.0128 41.8079 39.2537 41.7078 39.4313 41.5296C39.6089 41.3514 39.7087 41.1098 39.7087 40.8578V37.9735C39.7087 37.7215 39.6089 37.4799 39.4313 37.3017C39.2537 37.1235 39.0128 37.0234 38.7617 37.0234H35.8845C35.6334 37.0234 35.3925 37.1235 35.2149 37.3017C35.0373 37.4799 34.9375 37.7215 34.9375 37.9735V40.8597C34.938 41.1114 35.038 41.3525 35.2156 41.5303C35.3931 41.708 35.6337 41.8079 35.8845 41.8079ZM36.8316 38.9216H37.8146V39.9078H36.8316V38.9216Z" fill="white"/> <path d="M29.49 49.2316H32.3728C32.624 49.2316 32.8649 49.1315 33.0425 48.9534C33.2201 48.7752 33.3199 48.5336 33.3199 48.2816V45.3954C33.3199 45.1434 33.2201 44.9017 33.0425 44.7236C32.8649 44.5454 32.624 44.4453 32.3728 44.4453H29.49C29.2388 44.4453 28.998 44.5454 28.8204 44.7236C28.6427 44.9017 28.543 45.1434 28.543 45.3954V48.2816C28.543 48.5336 28.6427 48.7752 28.8204 48.9534C28.998 49.1315 29.2388 49.2316 29.49 49.2316ZM30.4371 46.3454H31.4258V47.3316H30.4427L30.4371 46.3454Z" fill="white"/> <path d="M35.8845 49.2316H38.7617C39.0128 49.2316 39.2537 49.1315 39.4313 48.9534C39.6089 48.7752 39.7087 48.5336 39.7087 48.2816V45.3954C39.7087 45.1434 39.6089 44.9017 39.4313 44.7236C39.2537 44.5454 39.0128 44.4453 38.7617 44.4453H35.8845C35.6334 44.4453 35.3925 44.5454 35.2149 44.7236C35.0373 44.9017 34.9375 45.1434 34.9375 45.3954V48.2816C34.9375 48.5336 35.0373 48.7752 35.2149 48.9534C35.3925 49.1315 35.6334 49.2316 35.8845 49.2316ZM36.8316 46.3454H37.8146V47.3316H36.8316V46.3454Z" fill="white"/> <path d="M29.49 56.6926H32.3728C32.624 56.6926 32.8649 56.5925 33.0425 56.4143C33.2201 56.2361 33.3199 55.9945 33.3199 55.7425V52.8563C33.3199 52.6043 33.2201 52.3627 33.0425 52.1845C32.8649 52.0063 32.624 51.9062 32.3728 51.9062H29.49C29.2388 51.9062 28.998 52.0063 28.8204 52.1845C28.6427 52.3627 28.543 52.6043 28.543 52.8563V55.7425C28.543 55.9945 28.6427 56.2361 28.8204 56.4143C28.998 56.5925 29.2388 56.6926 29.49 56.6926ZM30.4371 53.8063H31.4258V54.7925H30.4427L30.4371 53.8063Z" fill="white"/> <path d="M35.8845 56.6926H38.7617C39.0128 56.6926 39.2537 56.5925 39.4313 56.4143C39.6089 56.2361 39.7087 55.9945 39.7087 55.7425V52.8563C39.7087 52.6043 39.6089 52.3627 39.4313 52.1845C39.2537 52.0063 39.0128 51.9062 38.7617 51.9062H35.8845C35.6334 51.9062 35.3925 52.0063 35.2149 52.1845C35.0373 52.3627 34.9375 52.6043 34.9375 52.8563V55.7425C34.9375 55.9945 35.0373 56.2361 35.2149 56.4143C35.3925 56.5925 35.6334 56.6926 35.8845 56.6926ZM36.8316 53.8063H37.8146V54.7925H36.8316V53.8063Z" fill="white"/> <path d="M43.3008 25.1094H24.947C24.6959 25.1094 24.455 25.2095 24.2774 25.3876C24.0998 25.5658 24 25.8075 24 26.0594V61.0534C24 61.3054 24.0998 61.547 24.2774 61.7252C24.455 61.9034 24.6959 62.0035 24.947 62.0035H43.3008C43.552 62.0035 43.7929 61.9034 43.9705 61.7252C44.1481 61.547 44.2479 61.3054 44.2479 61.0534V26.0594C44.2479 25.8075 44.1481 25.5658 43.9705 25.3876C43.7929 25.2095 43.552 25.1094 43.3008 25.1094ZM42.3538 60.1034H25.8941V27.0095H42.3538V60.1034Z" fill="white"/> <path d="M41.569 15.9766C36.1178 15.9766 35.3033 19.125 35.2711 19.2599C35.2148 19.4991 35.2543 19.751 35.3811 19.9613C35.5079 20.1716 35.7119 20.3237 35.9492 20.3848C36.1904 20.447 36.4462 20.4133 36.6633 20.2908C36.8803 20.1683 37.0418 19.9664 37.1141 19.7273C37.1368 19.6513 37.7126 17.8786 41.5747 17.8786C45.8837 17.8786 46.4501 19.6684 46.4539 19.6665C46.4975 19.8811 46.6138 20.074 46.7829 20.2125C46.952 20.351 47.1636 20.4266 47.382 20.4266C47.4456 20.4269 47.5091 20.4205 47.5714 20.4076C47.6934 20.3833 47.8094 20.3351 47.9129 20.2658C48.0163 20.1965 48.1052 20.1074 48.1743 20.0036C48.2434 19.8999 48.2915 19.7835 48.3158 19.6611C48.34 19.5387 48.34 19.4127 48.3158 19.2903C48.2381 18.9559 47.4767 15.9766 41.569 15.9766Z" fill="white"/> <path d="M41.3464 12C31.0899 12 29.6371 18.0442 29.5803 18.3007C29.5272 18.5454 29.5725 18.8012 29.7064 19.0125C29.8404 19.2238 30.052 19.3735 30.2954 19.4291C30.5388 19.4847 30.7942 19.4417 31.0061 19.3093C31.218 19.177 31.3693 18.9661 31.427 18.7225C31.4744 18.5325 32.6961 13.9001 41.3464 13.9001C51.0063 13.9001 52.0859 18.4945 52.1257 18.6788C52.1659 18.8969 52.2809 19.0939 52.4508 19.2359C52.6206 19.3778 52.8346 19.4557 53.0557 19.456C53.1135 19.4563 53.1712 19.4513 53.228 19.4408C53.4749 19.3946 53.6934 19.252 53.8355 19.0443C53.9776 18.8365 54.0316 18.5807 53.9857 18.333C53.9402 18.0765 52.6901 12 41.3464 12Z" fill="white"/> <path d="M44.2079 21.4531H39.3533C39.1021 21.4531 38.8612 21.5532 38.6836 21.7314C38.506 21.9096 38.4062 22.1512 38.4062 22.4032C38.4062 22.6551 38.506 22.8968 38.6836 23.075C38.8612 23.2531 39.1021 23.3532 39.3533 23.3532H44.2079C44.459 23.3532 44.6999 23.2531 44.8775 23.075C45.0551 22.8968 45.1549 22.6551 45.1549 22.4032C45.1549 22.1512 45.0551 21.9096 44.8775 21.7314C44.6999 21.5532 44.459 21.4531 44.2079 21.4531Z" fill="white"/> </svg>';
+    //#endregion
+    //#region variable
+    let draw;
+    let DRAWING_ACTIVE = false;
+    //#endregion
+    //#region layers
+    loadBaseLayer = () => {
+        const baseLayers = new ol.layer.Group({
+            title: 'basemap',
+            openInLayerSwitcher: true,
+            layers: [
+                new ol.layer.Tile({
+                    title: 'satellite',
+                    baseLayer: true,
+                    type: "base",
+                    visible: true,
+                    source: new ol.source.XYZ({
+                        url: "https://mt0.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+                        crossOrigin: "anonymous",
+                    }),
+                }),
+                new ol.layer.Tile({
+                    title: 'street',
+                    baseLayer: true,
+                    type: "base",
+                    visible: false,
+                    source: new ol.source.XYZ({
+                        url: "https://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}",
+                        crossOrigin: "anonymous",
+                    }),
+                }),
+            ],
+        });
+        return baseLayers;
+    };
+    let vectorSourceMeasure = new ol.source.Vector({});
+    let deviceVectorLayer = new ol.layer.Vector({
+        Id: 'devicelayer',
+        source: new ol.source.Vector({}),
+        visible: false
+    });
+    let climateLayer = new ol.layer.Image({
+        title: 'climate layer',
+        Id: 'Indiaclimate',
+        visible: false,
+        source: new ol.source.ImageWMS({
+            url: "https://www.aajkabharatweb.com/geoserver/Aaj_Ka_Bharat_CONCOR/wms",
+            params: { LAYERS: "Aaj_Ka_Bharat_CONCOR:Climate Zone India Koppen", tiled: true },
+            serverType: "geoserver",
+            ratio: 1,
+            crossOrigin: "anonymous",
+        }),
+    })
+    let searchvectorSource = new ol.layer.Vector({
+        source: new ol.source.Vector({}),
+    });
+    //#endregion
+    //#region map view & map
+    let MapView = new ol.View({
+        zoom: 4,
+        center: ol.proj.fromLonLat([78.8718, 21.7679]),
+        constrainOnlyCenter: true,
+    });
+
+    let map = new ol.Map({
+        target: "map",
+        layers: [
+            loadBaseLayer(),
+            deviceVectorLayer,
+            climateLayer,
+            searchvectorSource,
+        ],
+        view: MapView,
+    })
+    //#endregion
+    //#region current location
+    loadGeolocationTool = () => {
+        const geolocation = new ol.Geolocation({
+            trackingOptions: {
+                enableHighAccuracy: true,
+            },
+            projection: map.getView().getProjection(),
+        });
+        geolocation.setTracking(true);
+        const coordinates = geolocation.getPosition();
+        const positionFeature = new ol.Feature();
+
+        positionFeature.setStyle(
+            new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: 5,
+                    fill: new ol.style.Fill({
+                        color: '#3399CC'
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: '#fff',
+                        width: 2
+                    })
+                })
+            })
+        )
+        positionFeature.setGeometry(coordinates ? new ol.geom.Point(coordinates) : null);
+
+        geolocation.on('change:position', function () {
+            const coordinates = geolocation.getPosition();
+            positionFeature.setGeometry(coordinates ? new ol.geom.Point(coordinates) : null);
+        });
+
+        const currentLocationLayer = new ol.layer.Vector({
+            source: new ol.source.Vector({
+                features: [positionFeature],
+            }),
+        });
+        map.addLayer(currentLocationLayer);
+    };
+    loadGeolocationTool();
+    //#endregion
+    //#region overlay
+    const popup = new ol.Overlay({
+        element: document.getElementById('popup'),
+        autoPan: {
+            animation: {
+                duration: 250,
+            },
+        },
+    });
+    map.addOverlay(popup);
+    const element = popup.getElement();
+    //#endregion
+    //#region map pointermove
+    map.on("pointermove", function (evt) {
+        if (DRAWING_ACTIVE == false) {
+            const pixel = map.getEventPixel(evt.originalEvent);
+            const coordinate = evt.coordinate;
+            map.forEachFeatureAtPixel(pixel, function (feature) {
+                let popover = bootstrap.Popover.getInstance(element);
+                if (feature.id_ != undefined) {
+                    map.addOverlay(popup);
+                    if (feature.id_.includes('device')) {
+                        popup.setPosition(coordinate);
+                        if (popover) {
+                            popover.dispose();
+                        }
+                        popover = new bootstrap.Popover(element, {
+                            animation: false,
+                            container: element,
+                            content: '<div ><p>device :' + feature.values_.id + '</p> <p> Status : ' + feature.values_.status + '</p> </div>',
+                            html: true,
+                            placement: 'right',
+                        });
+                        popover.show();
+                    }
+
+                }
+                else {
+                    map.removeOverlay(popup);
+                }
+
+            })
+        }
+
+    })
+    //#endregion
+    //#region drag & zoom
+    const dragZoomInt = new ol.interaction.DragZoom({
+        condition: ol.events.condition.always,
+        style: new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: "rgba(255, 255, 255, 0.6)",
+            }),
+            stroke: new ol.style.Stroke({
+                color: "#319FD3",
+                width: 3,
+            }),
+        }),
+    });
+
+    map.getView().on('change:resolution', (event) => {
+        $('#dragID').removeClass('zoom-color');
+        map.removeInteraction(dragZoomInt);
+        $('#r3').prop('checked', false);
+    })
+
+    loadStartDrag = () => {
+        map.addInteraction(dragZoomInt);
+    }
+    //#endregion
+    //#region measurment
+    let typeSelect = 'LineString';
+    let UnitSelectbox = 'KM';
+
+    typeSelectmeasur = (e) => {
+        typeSelect = e.value;
+        $("#startmesrment").css("display", "block");
+        $("#stopmesrment").css("display", "none");
+        vectorSourceMeasure.clear()
+        draw.setActive(false);
+    }
+    typeUniteMeasur = (e) => {
+        UnitSelectbox = e.value;
+        $("#startmesrment").css("display", "block");
+        $("#stopmesrment").css("display", "none");
+        vectorSourceMeasure.clear()
+        draw.setActive(false);
+    }
+    startMeasurment = () => {
+        measurementtool();
+        draw.setActive(true);
+        DRAWING_ACTIVE = true;
+        $("#startmesrment").css("display", "none");
+        $("#stopmesrment").css("display", "block");
+    }
+    stopMeasurment = () => {
+        draw.setActive(false);
+        DRAWING_ACTIVE = false;
+        $("#startmesrment").css("display", "block");
+        $("#stopmesrment").css("display", "none");
+    }
+    clearMeasurment = () => {
+        vectorSourceMeasure.clear();
+    }
+
+    function measurementtool() {
+
+        /* let typeSelect = $('MeasurementSelectbox').val();*/
+        /*let UnitSelectbox = $('UnitSelectbox').val();*/
+        let drawUnit = UnitSelectbox;
+        let showSegments = document.getElementById("ShowSegment").checked;
+        let clearPrevious = document.getElementById("ClearPrevious").checked;
+        const style_new = new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: "transparent",
+            }),
+            stroke: new ol.style.Stroke({
+                color: "rgba(255,128,0,1)",
+                width: 2,
+            }),
+            image: new ol.style.Circle({
+                radius: 5,
+                stroke: new ol.style.Stroke({
+                    color: "rgba(255,128,0,1)",
+                }),
+                fill: new ol.style.Fill({
+                    color: "rgba(255,128,0,1)",
+                }),
+            }),
+        });
+        let labelStyle = new ol.style.Style({
+            text: new ol.style.Text({
+                font: "14px Calibri,sans-serif",
+                fill: new ol.style.Fill({
+                    color: "rgba(255, 255, 255, 1)",
+                }),
+                backgroundFill: new ol.style.Fill({
+                    color: "rgba(0, 0, 0, 0.7)",
+                }),
+                padding: [3, 3, 3, 3],
+                textBaseline: "bottom",
+                offsetY: -15,
+            }),
+            image: new ol.style.RegularShape({
+                radius: 8,
+                points: 3,
+                angle: Math.PI,
+                displacement: [0, 10],
+                fill: new ol.style.Fill({
+                    color: "rgba(0, 0, 0, 0.7)",
+                }),
+            }),
+        });
+        const tipStyle = new ol.style.Style({
+            text: new ol.style.Text({
+                font: "12px Calibri,sans-serif",
+                fill: new ol.style.Fill({
+                    color: "rgba(255, 255, 255, 1)",
+                }),
+                backgroundFill: new ol.style.Fill({
+                    color: "rgba(0, 0, 0, 0.7)",
+                }),
+                padding: [2, 2, 2, 2],
+                textAlign: "left",
+                offsetX: 15,
+            }),
+        });
+        const modifyStyle = new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 5,
+                stroke: new ol.style.Stroke({
+                    color: "rgba(0, 0, 0, 0.7)",
+                }),
+                fill: new ol.style.Fill({
+                    color: "rgba(0, 0, 0, 0.4)",
+                }),
+            }),
+            text: new ol.style.Text({
+                text: "Drag to modify",
+                font: "12px Calibri,sans-serif",
+                fill: new ol.style.Fill({
+                    color: "rgba(255, 255, 255, 1)",
+                }),
+                backgroundFill: new ol.style.Fill({
+                    color: "rgba(0, 0, 0, 0.7)",
+                }),
+                padding: [2, 2, 2, 2],
+                textAlign: "left",
+                offsetX: 15,
+            }),
+        });
+        const segmentStyle = new ol.style.Style({
+            text: new ol.style.Text({
+                font: "12px Calibri,sans-serif",
+                fill: new ol.style.Fill({
+                    color: "rgba(255, 255, 255, 1)",
+                }),
+                backgroundFill: new ol.style.Fill({
+                    color: "rgba(0, 0, 0, 0.7)",
+                }),
+                padding: [2, 2, 2, 2],
+                textBaseline: "bottom",
+                offsetY: -12,
+            }),
+            image: new ol.style.RegularShape({
+                radius: 6,
+                points: 3,
+                angle: Math.PI,
+                displacement: [0, 8],
+                fill: new ol.style.Fill({
+                    color: "rgba(0, 0, 0, 0.4)",
+                }),
+            }),
+        });
+        const segmentStyles = [segmentStyle];
+        const formatLength = function (line) {
+            const length = ol.sphere.getLength(line, { projection: 'EPSG:4326' });
+            let output;
+            if (drawUnit === "KM") {
+                if (length > 100) {
+                    output = Math.round((length / 1000) * 100) / 100 + " km";
+                } else {
+                    output = Math.round(length * 100) / 100 + " m";
+                }
+            } else {
+                output = Math.round(length * 100) / 100 + " m";
+            }
+            return output;
+        };
+        const formatArea = function (polygon) {
+            const area = ol.sphere.getArea(polygon, { projection: 'EPSG:4326' });
+            let output;
+            if (drawUnit === "KM") {
+                if (area > 10000) {
+                    output = Math.round((area / 1000000) * 100) / 100 + " km\xB2";
+                } else {
+                    output = Math.round(area * 100) / 100 + " m\xB2";
+                }
+            } else {
+                output = Math.round(area * 100) / 100 + " m\xB2";
+            }
+            return output;
+        };
+        const modify = new ol.interaction.Modify({
+            source: vectorSourceMeasure,
+            style: modifyStyle,
+        });
+        let tipPoint;
+        function styleFunction(feature, segments, drawType, tip) {
+            let styles = [style_new];
+            let geometry = feature.getGeometry()
+            let type = geometry.getType()
+            let point, label, line;
+            if (!drawType || drawType === type) {
+                if (type === "Polygon") {
+                    point = geometry.getInteriorPoint()
+                    label = formatArea(geometry);
+                    line = new ol.geom.LineString(geometry.getCoordinates()[0]);
+                } else if (type === "LineString") {
+                    point = new ol.geom.Point(geometry.getLastCoordinate());
+                    label = formatLength(geometry);
+                    line = geometry;
+                }
+            }
+            if (segments && line) {
+                let count = 0;
+                line.forEachSegment(function (a, b) {
+                    const segment = new ol.geom.LineString([a, b]);
+                    const label = formatLength(segment);
+                    if (segmentStyles.length - 1 < count) {
+                        segmentStyles.push(segmentStyle.clone());
+                    }
+                    const segmentPoint = new ol.geom.Point(
+                        segment.getCoordinateAt(0.5)
+                    );
+                    segmentStyles[count].setGeometry(segmentPoint);
+                    segmentStyles[count].getText().setText(label);
+                    styles.push(segmentStyles[count]);
+                    count++;
+                });
+            }
+            if (label) {
+                labelStyle.setGeometry(point);
+                labelStyle.getText().setText(label);
+                styles.push(labelStyle);
+            }
+            if (
+                tip &&
+                type === "Point" &&
+                !modify.getOverlay().getSource().getFeatures().length
+            ) {
+                tipPoint = geometry;
+                tipStyle.getText().setText(tip);
+                styles.push(tipStyle);
+            }
+            return styles;
+        }
+        function _style(feature) {
+            return styleFunction(feature, showSegments.checked, drawType, tip);
+        }
+        const vector = new ol.layer.Vector({
+            source: vectorSourceMeasure,
+            style: _style,
+        });
+        map.addLayer(vector);
+        map.addInteraction(modify);
+        let drawType = typeSelect;
+        let idleTip = "Click to start measuring";
+        let tip = idleTip;
+        draw = new ol.interaction.Draw({
+            source: vectorSourceMeasure,
+            type: drawType === "Polygon" ? "Polygon" : "LineString",
+            style: function (feature) {
+                return styleFunction(feature, showSegments.checked, drawType, tip);
+            },
+        });
+        function addInteraction() {
+            let activeTip = "Click to continue drawing the ";
+            draw.on("drawstart", function () {
+                if (clearPrevious == true) {
+                    vectorSourceMeasure.clear()
+                }
+                modify.setActive(false);
+                tip = activeTip;
+            });
+            draw.on("drawend", function () {
+                modifyStyle.setGeometry(tipPoint);
+                modify.setActive(true);
+                map.once("pointermove", function () {
+                    modifyStyle.setGeometry()
+                });
+                tip = idleTip;
+            });
+            modify.setActive(true);
+            map.addInteraction(draw);
+        }
+        typeSelect.onclick = function () {
+            drawType = typeSelect;
+            map.removeInteraction(draw);
+            addInteraction()
+        };
+        addInteraction()
+        showSegments.onclick = function () {
+            vector.changed()
+            draw.getOverlay().changed()
+        };
+        draw.setActive(false);
+
+    };
+    //#endregion
+    //#region device layer
+    const loadDeviceLayer = () => {
+
+        let devicedata = [
+            {
+                id: 1,
+                number: 123,
+                status: 'deactive',
+                lat: 27.086669,
+                long: 93.610784,
+                zone: 'East',
+                city: 'Itanagar'
+            },
+            {
+                id: 2,
+                number: 1234,
+                status: 'active',
+                lat: 25.238881,
+                long: 87.641202,
+                zone: 'East',
+                city: 'Sahibganj'
+            },
+            {
+                id: 3,
+                number: 1255,
+                status: 'active',
+                lat: 24.172718,
+                long: 72.421456,
+                zone: 'West',
+                city: 'Palanpur'
+            },
+            {
+                id: 4,
+                number: 1222,
+                status: 'deactive',
+                lat: 34.084323,
+                long: 74.795680,
+                zone: 'North',
+                city: 'Shrinagar'
+            },
+            {
+                id: 5,
+                number: 1264,
+                status: 'active',
+                lat: 32.100859,
+                long: 76.276913,
+                zone: 'North',
+                city: 'Kangra'
+            },
+            {
+                id: 6,
+                number: 1294,
+                status: 'deactive',
+                lat: 8.895811,
+                long: 76.599583,
+                zone: 'South',
+                city: 'Kollam'
+            },
+            {
+                id: 7,
+                number: 1239,
+                status: 'active',
+                lat: 9.932038,
+                long: 78.148804,
+                zone: 'South',
+                city: 'Madurai'
+            },
+            {
+                id: 8,
+                number: 1244,
+                status: 'active',
+                lat: 23.835178,
+                long: 80.396656,
+                zone: 'Centeral',
+                city: 'Katni'
+            },
+        ]
+        let devicefeatures = [];
+        devicedata.forEach((element, ind) => {
+            const coordinates = ol.proj.transform([element.long, element.lat], 'EPSG:4326', 'EPSG:3857');
+            const dvcfeature = new ol.Feature({
+                geometry: new ol.geom.Point(coordinates),
+                status: element.status,
+                id: element.id,
+            })
+            dvcfeature.setId('device' + ind);
+            devicefeatures.push(dvcfeature);
+            (createDeviceStyle(dvcfeature));
+        });
+
+        deviceVectorLayer.getSource().addFeatures(devicefeatures);
+        deviceVectorLayer.setVisible(true);
+    };
+
+    const createDeviceStyle = (feature) => {
+        let status = feature.get("status");
+        const greenIconStyle = new ol.style.Style({
+            image: new ol.style.Icon({
+                anchor: [0.5, 36],
+                anchorXUnits: 'fraction',
+                anchorYUnits: 'pixels',
+                opacity: 1,
+                src: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(devicegreenicon)
+            }),
+        });
+
+        const redIconStyle = new ol.style.Style({
+            image: new ol.style.Icon({
+                anchor: [0.5, 36],
+                anchorXUnits: 'fraction',
+                anchorYUnits: 'pixels',
+                opacity: 1,
+                src: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(deviceredicon)
+            }),
+        });
+        if (status === 'active') {
+            feature.setStyle(greenIconStyle);
+        } else if (status === 'deactive') {
+            feature.setStyle(redIconStyle);
+        }
+        return [redIconStyle, greenIconStyle];
+
+    };
+    //#endregion
+    //#region map view
+    changeMapType = (type) => {
+        if (type === 'Street') {
+            map.getLayers().getArray()[0].values_.layers.array_[1].setVisible(false);
+            map.getLayers().getArray()[0].values_.layers.array_[0].setVisible(true);
+            climateLayer.setVisible(false);
+        }
+        else if (type === 'Satellite') {
+            map.getLayers().getArray()[0].values_.layers.array_[1].setVisible(true);
+            map.getLayers().getArray()[0].values_.layers.array_[0].setVisible(false);
+            climateLayer.setVisible(false);
+        }
+        else if (type === 'Climate') {
+            // map.getLayers().getArray()[0].values_.layers.array_[1].setVisible(false);
+            // map.getLayers().getArray()[0].values_.layers.array_[0].setVisible(false);
+            // heatmapLayer.setVisible(false);
+            climateLayer.setVisible(true);
+        }
+
+    }
+    //#endregion
+
+    //#region seacrh
+    const inputElement = document.getElementById('seacrhtext');
+    inputElement.addEventListener('input', function (e) {
+        filterSearch(inputElement.value)
+    });
+    filterSearch = (value) => {
+        let searchaddressdata = [
+            { name: 'BELMONTE APARTMENT', latitute: 28.440253, longitute: 77.100897 },
+            { name: 'PVR Naraina', latitute: 28.633236043644914, longitute: 77.138667488157 },
+            { name: 'World Trade Park', latitute: 26.852988, longitute: 75.804667 },
+            { name: 'Larsen & Toubro Limited', latitute: 23.026675285046156, longitute: 72.57016753309532 },
+            { name: 'Movie Time Cubic Mall', latitute: 19.045544601124245, longitute: 72.90329657032777 },
+            { name: 'Lal Imli Mill', latitute: 26.477199, longitute: 80.339335 },
+            { name: 'Murugappa Polytechnic College', latitute: 13.125777, longitute: 80.117415 },
+            { name: 'Treasure Island Mall (TI Mall)', latitute: 22.721673980760176, longitute: 75.87863587019763 },
+            { name: 'R P Sharma Institute Of Technology', latitute: 25.604432, longitute: 85.048575 },
+        ]
+
+        let fragment = '';
+        searchaddressdata.forEach(element => {
+            fragment += '<li>' + element.name + '</li>'
+        })
+        document.getElementById('searchresult').innerHTML = fragment;
+        // $("#searchresult").html(secterHtml);
+    }
+    let searchaddressdata = [
+        { name: 'BELMONTE APARTMENT', latitute: 28.440253, longitute: 77.100897 },
+        { name: 'PVR Naraina', latitute: 28.633236043644914, longitute: 77.138667488157 },
+        { name: 'World Trade Park', latitute: 26.852988, longitute: 75.804667 },
+        { name: 'Larsen & Toubro Limited', latitute: 23.026675285046156, longitute: 72.57016753309532 },
+        { name: 'Movie Time Cubic Mall', latitute: 19.045544601124245, longitute: 72.90329657032777 },
+        { name: 'Lal Imli Mill', latitute: 26.477199, longitute: 80.339335 },
+        { name: 'Murugappa Polytechnic College', latitute: 13.125777, longitute: 80.117415 },
+        { name: 'Treasure Island Mall (TI Mall)', latitute: 22.721673980760176, longitute: 75.87863587019763 },
+        { name: 'R P Sharma Institute Of Technology', latitute: 25.604432, longitute: 85.048575 },
+    ]
+
+    // let searchdata = [];
+    // $(document).ready(function () {
+    //     debugger
+    //     $("#searchtext").autocomplete({
+    //         source: function (request, response) {
+    //             // Escape regex
+    //             var term = $.ui.autocomplete.escapeRegex(request.term);
+    //             var matcher1 = new RegExp("^" + term, "i");
+    //             var matcher2 = new RegExp(term);
+    //             function subarray(matcher) {
+    //                 return $.grep(searchaddressdata, function (item) {
+    //                     return matcher.test(item)
+    //                 });
+    //             }
+    //             response($.merge(subarray(matcher1).slice(0, 5), subarray(matcher2).slice(0, 5)));
+    //             searchdata.push($.merge(subarray(matcher1).slice(0, 5), subarray(matcher2).slice(0, 5)))
+    //         }
+    //     })
+
+    // });
+    // $(document).on('click', '.ui-autocomplete li', function (evt) {
+    //     let place = placeSearchPosData.filter(item =>
+    //         item.name == evt.target.textContent
+    //     )
+    //     let search = document.getElementById("searchtext").value;
+    //     IsUniversalSearch = true;
+    //     //calculateSearchText(search);
+    //     showSearchItemOnMap(place[0])
+    //     $('.search-bar').css('border-radius', '10px');
+    //     $(".ui-menu ui-widget ui-widget-content ui-autocomplete ui-front").css("display", "none");
+    // });
+
+
+    let markerSVG = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="36px" height="36px" viewBox="-4 0 36 36" version="1.1"> <!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools --> <title>map-marker</title> <desc>Created with Sketch.</desc> <defs> </defs> <g id="Vivid.JS" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <g id="Vivid-Icons" transform="translate(-125.000000, -643.000000)"> <g id="Icons" transform="translate(37.000000, 169.000000)"> <g id="map-marker" transform="translate(78.000000, 468.000000)"> <g transform="translate(10.000000, 6.000000)"> <path d="M14,0 C21.732,0 28,5.641 28,12.6 C28,23.963 14,36 14,36 C14,36 0,24.064 0,12.6 C0,5.641 6.268,0 14,0 Z" id="Shape" fill="#FF6E6E"> </path> <circle id="Oval" fill="#0C0058" fill-rule="nonzero" cx="14" cy="14" r="7"> </circle> </g> </g> </g> </g> </g> </svg>'
+
+    createMapMarker = (searchdata) => {
+        let iconStyle = new ol.style.Style({
+            image: new ol.style.Icon({
+                anchor: [0.5, 36],
+                anchorXUnits: 'fraction',
+                anchorYUnits: 'pixels',
+                opacity: 1,
+
+                src: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(markerSVG)
+            }),
+            text: new ol.style.Text({
+                text: searchdata.name,
+                scale: 1.5,
+                font: '12px Cursive',
+                offsetX: 20,
+                placement: 'point',
+                textAlign: 'top',
+                fill: new ol.style.Fill({ color: '#ffffff' }),
+                backgroundFill: new ol.style.Fill({ color: '#FC4C4E' }),
+                padding: [5, 5, 5, 5],
+            })
+        })
+        return iconStyle;
+    };
+
+    searchzoom = (searchdata) => {
+        let coordinates = transform([searchdata.longitute, searchdata.latitute], 'EPSG:4326', 'EPSG:3857')
+        map.getView().animate({
+            center: coordinates,
+            zoom: 14,
+            easing: easeIn.easeOut,
+        })
+        let searchmarkerfeature = new Feature({
+            geometry: new Point(coordinates),
+            name: searchdata.name
+        });
+
+        searchmarkerfeature.setStyle(createMapMarker(searchdata));
+        searchvectorSource.getSource().addFeature(searchmarkerfeature);
+        searchvectorSource.setVisible(true);
+    }
+    //#endregion
+</script>

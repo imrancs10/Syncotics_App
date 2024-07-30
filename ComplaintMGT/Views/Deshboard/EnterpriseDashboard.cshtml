@@ -1,0 +1,1551 @@
+﻿@{
+    ViewData["Title"] = "Enterprise Dashboard";
+    Layout = "_LayoutNew";
+}
+
+<link rel="stylesheet" href="~/Dashboard/dashboardStyle.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+<link href="~/dashboard/dashboardgraph.css" rel="stylesheet" />
+<link href="~/v2.0/energy/dashboard/css/energydashboard.css" rel="stylesheet" />
+<script src="https://fastly.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style type="text/css">
+    .form-group {
+        width: 31% !important;
+    }
+
+    #TimeofDayModal .modal-content {
+        width: 600px;
+    }
+
+    .tableSite th, .tableSite td {
+        /*   padding-top: 10px;
+                            padding-bottom: 20px;
+                            padding-left: 20px; */
+        padding-right: 20px;
+        white-space: nowrap;
+        padding-top: 10px;
+        text-align: left;
+    }
+
+    .circleGreen {
+        width: 15px;
+        height: 15px;
+        background-color: green;
+        border-radius: 50%;
+    }
+
+    .circleRed {
+        width: 15px;
+        height: 15px;
+        background-color: red;
+        border-radius: 50%;
+    }
+
+    .card-title {
+        white-space: nowrap;
+    }
+</style>
+
+<div class="content-area" id="content">
+    <div class="row" style="margin-bottom: 1%;margin-left: 3%;">
+        <div class="col-6"></div>
+        <div class="col-6" style="text-align:right;">
+            <a class="report-button" style="width: 40%;" href="/Thermal/Consolidated_ThermalReport_Hot">Consolidated Tharmal Reports</a>
+            <a class="report-button" style="width: 40%;margin-left: 1%;" href="/Thermal/Consolidated_HumidityReport_Hot">Consolidated Humidity Reports</a>
+        </div>
+    </div>
+    <div class="row" style="margin-left:1%;">
+        <div class="col-6">
+            <div class="row" style="margin-left:1%;">
+                <div class="col-4">
+                    <div class="card bg-light mb-4">
+                        <div class="card-header text-white bg-info">
+                            <h6 class="card-title">Total Devices</h6>
+                        </div><div class="card-body text-center">
+                            <h1 id="TotalDevices"></h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card bg-light mb-4">
+                        <div class="card-header text-white bg-info">
+                            <h6 class="card-title">Active Devices</h6>
+                        </div><div class="card-body text-center">
+                            <h1 id="ActiveDevices"></h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card bg-light mb-4">
+                        <div class="card-header text-white bg-info">
+                            <h6 class="card-title">Inactive Devices</h6>
+                        </div><div class="card-body text-center">
+                            <h1 id="InactiveDevices"></h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row" style="margin-left:1%;">
+                <div class="col-4">
+                    <div class="card bg-light mb-4">
+                        <div class="card-header text-white bg-info">
+                            <h6 class="card-title">All Tickets</h6>
+                        </div><div class="card-body text-center">
+                            <h1 id="AllTicket">64</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card bg-light mb-4">
+                        <div class="card-header text-white bg-info">
+                            <h6 class="card-title">All Open Tickets</h6>
+                        </div><div class="card-body text-center">
+                            <h1 id="OpenTicket">2</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card bg-light mb-4">
+                        <div class="card-header text-white bg-info">
+                            <h6 class="card-title" style="white-space:nowrap;">All Closed Tickets</h6>
+                        </div><div class="card-body text-center">
+                            <h1 id="CloseTicket">62</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="col-12">
+                <div class="card bg-light mb-12">
+                    <div class="card-header text-white bg-info">
+                        <h6 class="card-title">Site View</h6>
+                    </div>
+                    <div class="card-body text-center" style="max-height: 245px;overflow-y: auto;">
+                        @* overflow-x:hidden *@
+                        <table cellpadding="5" cellspacing="5" style="border-spacing: 30px;" class="tableSite">
+                            <thead>
+                                <tr>
+                                    <th>Store</th>
+                                    <th>Device</th>
+                                    <th>Temperature</th>
+                                    <th>Humidity</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deviceConsumptionDetail">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row1">
+        <!--row1 IMAGES-->
+        <div class="row1-img">
+            <div class="img1-header">
+                <div class="icon-h">
+                    <a href="#" style="text-decoration: none;"><img src="~/Dashboard/assests/Icons/1.png" alt="" class="icon"></a>
+                    <div class="img1-button">Alerts</div>
+                </div>
+                <a href="javascript:return false;"><span class="material-symbols-outlined">add</span></a>
+            </div>
+            <div class="chart-container-large" id="alert-chart-container"></div>
+        </div>
+        <div class="row1-img">
+            <div class="img1-header">
+                <div class="icon-h">
+                    <a href="#" style="text-decoration: none;"><img src="~/Dashboard/assests/Icons/2.png" alt="" class="icon"></a>
+                    <div class="img1-button">Compliance</div>
+                </div>
+                <a href="javascript:return false;" id="btnAddCompliance"><span class="material-symbols-outlined">add</span></a>
+            </div>
+            <div class="chart-container" id="compliance-summary-chart-container"></div>
+        </div>
+        <div class="row1-img">
+            <div class="img1-header">
+                <div class="icon-h">
+                    <a href="#" style="text-decoration: none;"><img src="~/Dashboard/assests/Icons/2.png" alt="" class="icon"></a>
+                    <div class="img1-button">Employee & Guest Comfort</div>
+                </div>
+                <a href="javascript:return false;" id="btnAddEmpGuestConfort"><span class="material-symbols-outlined">add</span></a>
+            </div>
+            <div class="chart-container-large" id="employee-guestconfort-chart-container"></div>
+        </div>
+    </div><br>
+
+    <div class="row2">
+        <!--ROW2 IMGAES-->
+        <div class="row2-img">
+            <div class="img1-header">
+                <div class="icon-h">
+                    <a href="#" style="text-decoration: none;"><img src="~/Dashboard/assests/Icons/4.png" alt="" class="icon"></a>
+                    <div class="img1-button">Energy Consumption(Actual)</div>
+                </div>
+                <a href="javascript:return false;" id="btnAddEnergyConsumptionActual"><span class="material-symbols-outlined">add</span></a>
+            </div>
+            <div class="graph4-container">
+                <a href="#" style="text-decoration: none;">
+                    <div class="graph4" style="text-decoration: none;">
+                        <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                        <div class="g-text">
+                            <span id="tyesterday"></span> @* Unit *@
+                            <div class="g-stext">Yesterday</div>
+                        </div>
+                    </div>
+                </a>
+                <a href="#" style="text-decoration: none;">
+                    <div class="graph4">
+                        <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                        <div class="g-text">
+                            <span id="tToday"></span> @* Unit *@
+                            <div class="g-stext">Today</div>
+                        </div>
+                    </div>
+                </a>
+                <a href="#" style="text-decoration: none;">
+                    <div class="graph4-3">
+                        <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                        <div class="g-text">
+                            <span id="tPreviousHR"></span> @* Unit *@
+                            <div class="g-stext">Previous Hour</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="row2-img">
+            <div class="img1-header">
+                <div class="icon-h">
+                    <a href="#" style="text-decoration: none;"><img src="~/Dashboard/assests/Icons/4.png" alt="" class="icon"></a>
+                    <div class="img1-button"> Savings </div>
+                </div>
+                <a href="javascript:return false;" id="btnSavingsModel"><span class="material-symbols-outlined">add</span></a>
+            </div>
+            <div class="graph4-container">
+                <a href="#" style="text-decoration: none;">
+                    <div class="graph4" style="text-decoration: none;">
+                        <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                        <div class="g-text">
+                            15 Unit
+                            <div class="g-stext">Yesterday</div>
+                        </div>
+                    </div>
+                </a>
+                <a href="#" style="text-decoration: none;">
+                    <div class="graph4">
+                        <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                        <div class="g-text">
+                            60 Unit
+                            <div class="g-stext">Current Week</div>
+                        </div>
+                    </div>
+                </a>
+                <a href="#" style="text-decoration: none;">
+                    <div class="graph4-3">
+                        <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                        <div class="g-text">
+                            250 Unit
+                            <div class="g-stext">Current Month</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="row2-imgt">
+            <div class="img1-header">
+                <div class="icon-h">
+                    <a href="#" style="text-decoration: none;"><img src="~/Dashboard/assests/Icons/4.png" alt="" class="icon"></a>
+                    <div class="img1-button">Time of Day</div>
+                </div>
+                <a href="javascript:return false;" id="btnAddTimeofDay"><span class="material-symbols-outlined">add</span></a>
+            </div>
+            <div class="graph4t-container" id="todDashboard">
+                @* <a href="#" style="text-decoration: none;">
+                <div class="graph4t" style="text-decoration: none;">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="OpsWindow"></span>
+                <div class="g-stextt">Ops Schedule</div>
+                </div>
+                </div>
+                </a>
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4t">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="NonOps"></span>
+                <div class="g-stextt">Non-Ops Schedule</div>
+                </div>
+                </div>
+                </a> *@
+            </div>
+        </div>
+
+    </div>
+
+    <br>
+    <div class="row4">
+        <div class="row2-imgt">
+            <div class="img1-header">
+                <div class="icon-h">
+                    <a href="#" style="text-decoration: none;"><img src="~/Dashboard/assests/Icons/10.png" alt="" class="icon"></a>
+                    <div class="img1-button">Control Enablement</div>
+                </div>
+                <a href="javascript:return false;" id="btnAddControlEnablement"><span class="material-symbols-outlined">add</span></a>
+            </div>
+            <div class="graph4t-container" style="margin-bottom: 5%;">
+                <a href="#" style="text-decoration: none;">
+                    <div class="graph4t" style="text-decoration: none;">
+                        <div class="g-icon"><img src="~/Dashboard/assests/Icons/ceicon-1.png" alt="" class="graph-icont"></div>
+                        <div class="g-textt" style="font-weight: 1000; margin-top:5%;">
+                            _ _
+                            <div class="g-stextt">Control Enablement Nos</div>
+                        </div>
+                    </div>
+                </a>
+                <a href="#" style="text-decoration: none;">
+                    <div class="graph4t">
+                        <div class="g-icon"><img src="~/Dashboard/assests/Icons/ceicon-1.png" alt="" class="graph-icont"></div>
+                        <div class="g-textt" style="font-weight: 1000; margin-top:5%;">
+                            _ _
+                            <div class="g-stextt">Control Enablement Hrs</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="row2-imgt">
+            <div class="img1-header">
+                <div class="icon-h">
+                    <a href="#" style="text-decoration: none;"><img src="~/Dashboard/assests/Icons/11.png" alt="" class="icon"></a>
+                    <div class="img1-button">Overrides</div>
+                </div>
+                <a href="javascript:return false;" id="btnAddOverrides"><span class="material-symbols-outlined">add</span></a>
+            </div>
+            <div class="graph4t-container" style="margin-bottom: 5%;">
+                <a href="#" style="text-decoration: none;">
+                    <div class="graph4t" style="text-decoration: none;">
+                        <div class="g-icon"><img src="~/Dashboard/assests/Icons/ceicon-2.png" alt="" class="graph-icont"></div>
+                        <div class="g-textt" style="font-weight: 1000;">
+                            _ _
+                            <div class="g-stextt">Override Nos</div>
+                        </div>
+                    </div>
+                </a>
+                <a href="#" style="text-decoration: none;">
+                    <div class="graph4t">
+                        <div class="g-icon"><img src="~/Dashboard/assests/Icons/ceicon-2.png" alt="" class="graph-icont"></div>
+                        <div class="g-textt" style="font-weight: 1000;">
+                            _ _
+                            <div class="g-stextt">Override Hrs</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="row6">
+        <div class="row1-img">
+            <div class="img1-header">
+                <div class="icon-h">
+                    <a href="javascript:return false;" style="text-decoration: none;"><img src="~/Dashboard/assests/Icons/13.png" alt="" class="icon"></a>
+                    <div class="img2-button" id="chart_label_one">&nbsp;</div>
+                </div>
+            </div>
+            <div id="carouselTMRefrigeration" class="carousel slide" data-ride="carousel">
+                <ol class="carousel-indicators">
+                </ol>
+                <div class="carousel-inner">
+                </div>
+                <a class="carousel-control-prev" href="#carouselTMRefrigeration" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#carouselTMRefrigeration" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </a>
+            </div>
+
+        </div>
+        <div class="row1-img">
+            <div class="img1-header">
+                <div class="icon-h">
+                    <a href="javascript:return false;" style="text-decoration: none;"><img src="~/Dashboard/assests/Icons/13.png" alt="" class="icon"></a>
+                    <div class="img2-button" id="chart_label_two">&nbsp;</div>
+                </div>
+            </div>
+            <div id="carouselTMNonRefrigeration" class="carousel slide" data-ride="carousel">
+                <ol class="carousel-indicators">
+                </ol>
+                <div class="carousel-inner">
+                </div>
+                <a class="carousel-control-prev" href="#carouselTMNonRefrigeration" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#carouselTMNonRefrigeration" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </a>
+
+            </div>
+        </div>
+
+        <div class="row1-img">
+            <div class="img1-header">
+                <div class="icon-h">
+                    <a href="javascript:return false;" style="text-decoration: none;"><img src="~/Dashboard/assests/Icons/13.png" alt="" class="icon"></a>
+                    <div class="img1-button">Thermal Monitoring - HVAC</div>
+                </div>
+            </div>
+            <div id="carouselTMHVAC" class="carousel slide" data-ride="carousel">
+                <ol class="carousel-indicators">
+                </ol>
+                <div class="carousel-inner">
+                </div>
+                <a class="carousel-control-prev" href="#carouselTMHVAC" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#carouselTMHVAC" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </a>
+            </div>
+        </div>
+    </div><br>
+
+
+
+
+
+    <div class="row7">
+        <div class="row7-img">
+            <div class="row8">
+                <div class="row1-img">
+                    <div class="img1-header">
+                        <div class="icon-h">
+                            <a href="javascript:return false;" style="text-decoration: none;"><img src="~/Dashboard/assests/Icons/2.png" alt="" class="icon"></a>
+                            <div class="img1-button">Avg. AQI for Today</div>
+                        </div>
+                    </div>
+                    <div class="avgAqi-graphBox">
+                        <div id="AvgAQIdiv" class="rcorners3">
+                            <h6 id="AvgAQI"> 0 </h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="row1-img">
+                    <div class="img1-header">
+                        <div class="icon-h">
+                            <a href="#" style="text-decoration: none;"><img src="~/Dashboard/assests/Icons/2.png" alt="" class="icon"></a>
+                            <div class="img1-button">Avg. PM2.5 for Today</div>
+                        </div>
+                    </div>
+                    <div class="avgPm25-graphBox">
+                        <div id="AvgPM25div" class="rcorners3">
+                            <h6 id="AvgPM25"> 0 </h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="row1-img">
+                    <div class="img1-header">
+                        <div class="icon-h">
+                            <a href="#" style="text-decoration: none;"><img src="~/Dashboard/assests/Icons/2.png" alt="" class="icon"></a>
+                            <div class="img1-button">Avg. Indoor Health Index for Today</div>
+                        </div>
+                    </div>
+                    <div class="chart-container-small" id="avg-health-index-chart-container"></div>
+                </div>
+            </div><br>
+
+        </div>
+    </div>
+
+    <br>
+
+    <div class="row9">
+        <div class="row1-img">
+            <div class="img1-header">
+                <div class="icon-h">
+                    <a href="#" style="text-decoration: none;"><img src="~/Dashboard/assests/Icons/20.png" alt="" class="icon"></a>
+                    <div class="img1-button">Customer Footfall</div>
+                </div>
+                <a href="javascript:return false;" id="btnAddCustomerFootfall"><span class="material-symbols-outlined">add</span></a>
+            </div>
+            <div class="chart-container" id="customer-footfall-chart-container"></div>
+        </div>
+    </div><br>
+</div>
+<div class="right_bar" id="right-bar">
+    <div class="Savings">
+        <div class="header1">
+            <div class="topic">Savings</div>
+            <button class="X" onclick="closeSidebar('right')" id="x">X</button>
+        </div>
+        <div class="details">
+            <div class="details-text">
+                15 UNITS
+                <div class="sub-text">Previous Hour</div>
+            </div>
+            <div class="details-text">
+                60 UNITS
+                <div class="sub-text">Today</div>
+            </div>
+            <div class="details-text">
+                250 UNITS
+                <div class="sub-text">Yesterday</div>
+            </div>
+            <div class="details-text">
+                200 UNITS
+                <div class="sub-text">Current Weak</div>
+            </div>
+            <div class="details-text">
+                700 UNITS
+                <div class="sub-text">Previous Weak</div>
+            </div>
+        </div>
+        <!--    TIME OF DAY-->
+
+
+        <div class="Time_of_day">
+            <div class="header1">
+                <div class="topic">Time of Day</div>
+                <button class="X" onclick="closeSidebar('right')" id="x">X</button>
+            </div>
+            <div class="details">
+                <div class="details-text">
+                    50/54
+                    <div class="sub-text">Non-Ops Schedule</div>
+                </div>
+                <div class="details-text">
+                    5/7
+                    <div class="sub-text"></div>
+                </div>
+                <div class="details-text">
+                    9/11
+                    <div class="sub-text">Pre Lunch</div>
+                </div>
+                <div class="details-text">
+                    15/17
+                    <div class="sub-text">Peak Lunch</div>
+                </div>
+                <div class="details-text">
+                    6/8
+                    <div class="sub-text">Post Lunch</div>
+                </div>
+                <div class="details-text">
+                    12/13
+                    <div class="sub-text">Pre Dinner</div>
+                </div>
+                <div class="details-text">
+                    24/26
+                    <div class="sub-text">Peak Dinner Dinner</div>
+                </div>
+                <div class="details-text">
+                    13/16
+                    <div class="sub-text">Crew Shutdown</div>
+                </div>
+            </div>
+        </div>
+
+
+        <!--UPS HEALTH MONITOR-->
+
+
+        <div class="Ups">
+            <div class="header1">
+                <div class="topic">UPS Health Monitor</div>
+                <button class="X" onclick="closeSidebar('right')" id="x">X</button>
+            </div>
+            <div class="details">
+                <div class="details-text">
+                    10
+                    <div class="sub-text">Voltage</div>
+                </div>
+                <div class="details-text">
+                    2
+                    <div class="sub-text">Current</div>
+                </div>
+                <div class="details-text">
+                    0
+                    <div class="sub-text">Impedance Resistance</div>
+                </div>
+                <div class="details-text">
+                    4
+                    <div class="sub-text">insultation</div>
+                </div>
+                <div class="details-text">
+                    15
+                    <div class="sub-text">Ripple Current</div>
+                </div>
+                <div class="details-text">
+                    4
+                    <div class="sub-text">Ripple Voltage</div>
+                </div>
+                <div class="details-text">
+                    4
+                    <div class="sub-text">SOC</div>
+                </div>
+                <div class="details-text">
+                    20
+                    <div class="sub-text">SOH</div>
+                </div>
+            </div>
+        </div>
+
+
+        <!--ENERGY CONSUMPTION-->
+
+        <div class="energy">
+            <div class="header1">
+                <div class="topic">Energy Consumption</div>
+                <button class="X" onclick="closeSidebar('right')" id="x">X</button>
+            </div>
+            <div class="details">
+                <div class="details-text">
+                    15 UNITS
+                    <div class="sub-text">Previous Hour</div>
+                </div>
+                <div class="details-text">
+                    60 UNITS
+                    <div class="sub-text">Today</div>
+                </div>
+                <div class="details-text">
+                    250 UNITS
+                    <div class="sub-text">Yesterday</div>
+                </div>
+                <div class="details-text">
+                    200 UNITS
+                    <div class="sub-text">Current Weak</div>
+                </div>
+                <div class="details-text">
+                    700 UNITS
+                    <div class="sub-text">Previous Weak</div>
+                </div>
+                <div class="details-text">
+                    25020 UNITS
+                    <div class="sub-text">Current Month</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Complience Modal -->
+<div class="modal fade" id="ComplienceModel" tabindex="-1" role="dialog" aria-labelledby="ComplienceModelLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ComplienceModelLabel"><b>Device Compliance</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height:400px;">
+                <div class="chart-container has-fixed-size-compliance" id="compliance-chart-container"></div>
+            </div>
+            @*  <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+            </div> *@
+        </div>
+    </div>
+</div>
+
+@* EMployee Guest Confort *@
+<div class="modal fade" id="EmployeeGuestConfortModel" tabindex="-1" role="dialog" aria-labelledby="EmployeeGuestConfortModelLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="EmployeeGuestConfortModelLabel"><b>Employee Guest Comfort</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height:400px;">
+                <div class="chart-container has-fixed-size-compliance" id="employee-guest-confort-chart-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Energy Consumption(Actual) Modal -->
+<div class="modal fade" id="EnergyConsumptionActualModal" tabindex="-1" role="dialog" aria-labelledby="EnergyConsumptionActualModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="EnergyConsumptionActualModalLabel"><b>Energy Consumption(Actual)</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height:400px;">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4" style="text-decoration: none;">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modeltyesterday"></span> @* Unit *@
+                                    <div class="g-stext">Yesterday</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modeltToday"></span> @* Unit *@
+                                    <div class="g-stext">Today</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modeltPreviousHR"></span> @* Unit *@
+                                    <div class="g-stext">Previous Hour</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modeltCurrentWeek"></span> @* Unit *@
+                                    <div class="g-stext">Current Week</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modeltLastWeek"></span> @* Unit *@
+                                    <div class="g-stext">Last Week</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modeltmontht"></span> @* Unit *@
+                                    <div class="g-stext">Current Month</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Savings Modal -->
+<div class="modal fade" id="SavingsModal" tabindex="-1" role="dialog" aria-labelledby="SavingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="SavingsModalLabel"><b>Savings</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height:400px;">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4" style="text-decoration: none;">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingyesterday">15</span> @* Unit *@
+                                    <div class="g-stext">Yesterday</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingCurrentWeek">60</span> @* Unit *@
+                                    <div class="g-stext">Current Week</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingCurrentMonth">250</span> @* Unit *@
+                                    <div class="g-stext">Current Month</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingPreviousMonth">300</span> @* Unit *@
+                                    <div class="g-stext">Previous Month</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingPreviousMonth">100</span> @* Unit *@
+                                    <div class="g-stext">Last 3 Month</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingLast3Month">3200</span> @* Unit *@
+                                    <div class="g-stext">Savings till Date</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Control Enablement Modal -->
+<div class="modal fade" id="ControlEnablementModal" tabindex="-1" role="dialog" aria-labelledby="ControlEnablementModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ControlEnablementModalLabel"><b>Control Enablement</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height:400px;">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4" style="text-decoration: none;">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingyesterday">15</span> @* Unit *@
+                                    <div class="g-stext">Yesterday</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingCurrentWeek">60</span> @* Unit *@
+                                    <div class="g-stext">Current Week</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingCurrentMonth">250</span> @* Unit *@
+                                    <div class="g-stext">Current Month</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingPreviousMonth">300</span> @* Unit *@
+                                    <div class="g-stext">Previous Month</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingPreviousMonth">100</span> @* Unit *@
+                                    <div class="g-stext">Last 3 Month</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingLast3Month">3200</span> @* Unit *@
+                                    <div class="g-stext">Savings till Date</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Overrides Modal -->
+<div class="modal fade" id="OverridesModal" tabindex="-1" role="dialog" aria-labelledby="OverridesModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="OverridesModalLabel"><b>Overrides</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height:400px;">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4" style="text-decoration: none;">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingyesterday">15</span> @* Unit *@
+                                    <div class="g-stext">Yesterday</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingCurrentWeek">60</span> @* Unit *@
+                                    <div class="g-stext">Current Week</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingCurrentMonth">250</span> @* Unit *@
+                                    <div class="g-stext">Current Month</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingPreviousMonth">300</span> @* Unit *@
+                                    <div class="g-stext">Previous Month</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingPreviousMonth">100</span> @* Unit *@
+                                    <div class="g-stext">Last 3 Month</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4-3">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icon"></div>
+                                <div class="g-text">
+                                    <span id="modelsavingLast3Month">3200</span> @* Unit *@
+                                    <div class="g-stext">Savings till Date</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Time of Day Modal -->
+<div class="modal fade" id="TimeofDayModal" tabindex="-1" role="dialog" aria-labelledby="TimeofDayModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="TimeofDayModalLabel"><b>Time of Day</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="width:100%;" id="todModalBody">
+                @*        <div class="row">
+                <div class="col-md-4">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4" style="width:100%">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelOpsWindow"></span>
+                <div class="g-stextt">Ops Schedule</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                <div class="col-md-4">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4" style="width:100%">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelNonOps"></span>
+                <div class="g-stextt">Non-Ops Schedule</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                <div class="col-md-4">
+                <a href="#" style="text-decoration: none;width:100%">
+                <div class="graph4" style="width:100%">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelPreviousDayNoOps"></span>
+                <div class="g-stextt" style="white-space:nowrap;">Previous Day No Operations</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                </div>
+
+                <div class="row" style="margin-top:3%;">
+                <div class="col-md-3">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelCrew"></span>
+                <div class="g-stextt">Crew Setup</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                <div class="col-md-3">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelPreLunch"></span>
+                <div class="g-stextt">Pre Lunch</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                <div class="col-md-3">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelPeakLunch"></span>
+                <div class="g-stextt">Peak Lunch</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                <div class="col-md-3">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelPostLunch"></span>
+                <div class="g-stextt">Post Lunch</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                </div>
+
+                <div class="row" style="margin-top:3%;">
+                <div class="col-md-3">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelPreDinner"></span>
+                <div class="g-stextt">Pre Dinner</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                <div class="col-md-3">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelPeakDinner"></span>
+                <div class="g-stextt">Peak Dinner</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                <div class="col-md-3">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelCrewShutdown"></span>
+                <div class="g-stextt">Crew Shutdown</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                <div class="col-md-3">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelNoOperations"></span>
+                <div class="g-stextt">No Operations</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                </div> *@
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Electrical Health - (mains)Real Time - Power Factor Modal -->
+<div class="modal fade" id="ElectricalHealthPowerFactorModel" tabindex="-1" role="dialog" aria-labelledby="ElectricalHealthPowerFactorModelLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ElectricalHealthPowerFactorModelLabel"><b>Electrical Health - (mains)Real Time - Power Factor</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height:400px;">
+                <div class="chart-container has-fixed-size-compliance" id="electricalhealth-powerfactor-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Electrical Health - (mains)Real Time - Current Modal -->
+<div class="modal fade" id="ElectricalHealthCurrentModel" tabindex="-1" role="dialog" aria-labelledby="ElectricalHealthCurrentModelLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ElectricalHealthCurrentModelLabel"><b>Electrical Health - (mains)Real Time - Current</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="width:100%;">
+                <div class="chart-container has-fixed-size-compliance" id="electricalhealth-current-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Electrical Health - (mains)Real Time - Voltage Modal -->
+<div class="modal fade" id="ElectricalHealthVoltageModel" tabindex="-1" role="dialog" aria-labelledby="ElectricalHealthVoltageModelLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="width:45vw;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ElectricalHealthVoltageModelLabel"><b>Electrical Health - (mains)Real Time - Voltage</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height:400px;">
+                <div class="chart-container has-fixed-size-compliance" id="electricalhealth-voltage-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Electrical Health - (mains)Real Time - Watts Total Modal -->
+<div class="modal fade" id="ElectricalHealthWattsTotalModel" tabindex="-1" role="dialog" aria-labelledby="ElectricalHealthWattsTotalModelLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ElectricalHealthWattsTotalModelLabel"><b>Electrical Health - (mains)Real Time - Watts Total</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height:400px;">
+                <div class="chart-container has-fixed-size-compliance" id="electricalhealth-wattstotal-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Electrical Health - (mains)Real Time - Wh Received Modal -->
+<div class="modal fade" id="ElectricalHealthWhReceivedModel" tabindex="-1" role="dialog" aria-labelledby="ElectricalHealthWhReceivedModelLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ElectricalHealthWhReceivedModelLabel"><b>Electrical Health - (mains)Real Time - Wh Received</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height:400px;">
+                <div class="chart-container has-fixed-size-compliance" id="electricalhealth-WhReceived-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Electrical Health - (mains)Real Time - VAH Received Modal -->
+<div class="modal fade" id="ElectricalHealthVAHReceivedModel" tabindex="-1" role="dialog" aria-labelledby="ElectricalHealthVAHReceivedModelLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="width: 563px;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ElectricalHealthVAHReceivedModelLabel"><b>Electrical Health - (mains)Real Time - kVAh Received</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height:400px;">
+                <div class="chart-container has-fixed-size-compliance" id="electricalhealth-VAHReceived-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Electrical Health - (mains)Real Time - Load Hours Received (Run HRS) Modal -->
+<div class="modal fade" id="ElectricalHealthRunHRSModel" tabindex="-1" role="dialog" aria-labelledby="ElectricalHealthRunHRSModelLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ElectricalHealthRunHRSModelLabel"><b>Electrical Health - (mains)Real Time - Run HRS</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height:400px;">
+                <div class="chart-container has-fixed-size-compliance" id="electricalhealth-runhrs-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer footfall Modal -->
+<div class="modal fade" id="CustomerFootfallModal" tabindex="-1" role="dialog" aria-labelledby="CustomerFootfallModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="CustomerFootfallModalLabel"><b>Customer Footfall</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height:100%;" id="footfall_desc">
+                @* <div class="row">
+                <div class="col-md-6">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4t" style="text-decoration: none;width: 9vw;height: 18vh;">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt" style="margin-top: 10%">
+                <span id="modelCFYesterday"></span>
+                <div class="g-stextt">Yesterday</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                <div class="col-md-6">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4t" style="width: 9vw;height: 18vh;">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt" style="margin-top: 10%">
+                <span id="modelCFToday"></span>
+                <div class="g-stextt">Today</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                </div>
+
+                <div class="row" style="margin-top:3%;">
+                <div class="col-md-4">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4t" style="width: 7vw;height: 18vh;">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelCFPreLunch"></span>
+                <div class="g-stextt">Pre Lunch</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                <div class="col-md-4">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4t" style="width: 7vw;height: 18vh;">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelCFPeakLunch"></span>
+                <div class="g-stextt">Peak Lunch</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                <div class="col-md-4">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4t" style="width: 7vw;height: 18vh;">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelCFPostLunch"></span>
+                <div class="g-stextt">Post Lunch</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                </div>
+
+                <div class="row" style="margin-top:3%;">
+                <div class="col-md-4" style="margin-left:17%">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4t" style="width: 7vw;height: 18vh;">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelCFPreDinner"></span>
+                <div class="g-stextt">Pre Dinner</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                <div class="col-md-4">
+                <a href="#" style="text-decoration: none;">
+                <div class="graph4t" style="width: 7vw;height: 18vh;">
+                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                <div class="g-textt">
+                <span id="modelCFPeakDinner"></span>
+                <div class="g-stextt">Peak Dinner</div>
+                </div>
+                </div>
+                </a>
+                </div>
+                </div> *@
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Time of Day Gas Consumption Modal -->
+<div class="modal fade" id="TimeofDayGasConsumptionModal" tabindex="-1" role="dialog" aria-labelledby="TimeofDayGasConsumptionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="TimeofDayGasConsumptionModalLabel"><b>Time of Day(Gas Consumption)</b></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4" style="text-decoration: none;width:100%">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                                <div class="g-textt">
+                                    <span id="modelGCOpsWindow"></span>
+                                    <div class="g-stextt">Ops Schedule</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4" style="width:100%">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                                <div class="g-textt">
+                                    <span id="modelGCNonOps"></span>
+                                    <div class="g-stextt">Non-Ops Schedule</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4" style="width:100%">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                                <div class="g-textt">
+                                    <span id="modelGCPreviousDayNoOps"></span>
+                                    <div class="g-stextt" style="white-space:nowrap;">Previous Day No Operations</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top:3%;">
+                    <div class="col-md-3">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                                <div class="g-textt">
+                                    <span id="modelGCCrew"></span>
+                                    <div class="g-stextt">Crew Setup</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                                <div class="g-textt">
+                                    <span id="modelGCPreLunch"></span>
+                                    <div class="g-stextt">Pre Lunch</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                                <div class="g-textt">
+                                    <span id="modelGCPeakLunch"></span>
+                                    <div class="g-stextt">Peak Lunch</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                                <div class="g-textt">
+                                    <span id="modelGCPostLunch"></span>
+                                    <div class="g-stextt">Post Lunch</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top:3%;">
+                    <div class="col-md-3">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                                <div class="g-textt">
+                                    <span id="modelGCPreDinner"></span>
+                                    <div class="g-stextt">Pre Dinner</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                                <div class="g-textt">
+                                    <span id="modelGCPeakDinner"></span>
+                                    <div class="g-stextt">Peak Dinner</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                                <div class="g-textt">
+                                    <span id="modelGCCrewShutdown"></span>
+                                    <div class="g-stextt">Crew Shutdown</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="#" style="text-decoration: none;">
+                            <div class="graph4">
+                                <div class="g-icon"><img src="~/Dashboard/assests/Icons/icon-graph.png" alt="" class="graph-icont"></div>
+                                <div class="g-textt">
+                                    <span id="modelGCNoOperations"></span>
+                                    <div class="g-stextt">No Operations</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/dashboard/dashboard.js"></script>
+<script src="~/dashboard/alert-dashboard.js"></script>
+<script src="~/dashboard/compliance-dashboard.js"></script>
+<script src="~/dashboard/employee-guestconfort-dashboard.js"></script>
+<script src="~/dashboard/tmrefrigeration-dashboard.js"></script>
+<script src="~/dashboard/tmnonrefrigeration-dashboard.js"></script>
+<script src="~/dashboard/tmhvac-dashboard.js"></script>
+<script src="~/dashboard/customer-footfall-dashboard.js"></script>
+<script src="~/dashboard/gas-consumption-dashboard.js"></script>
+<script src="~/dashboard/realtime-view-dashboard.js"></script>
+<script src="~/dashboard/energy-distribution-dashboard.js"></script>
+<script src="~/dashboard/avg-health-index-dashboard.js"></script>
